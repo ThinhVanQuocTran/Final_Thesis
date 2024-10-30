@@ -1,0 +1,19 @@
+[package]
+name = "DF_query"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+arrow = "52.0.0"
+arrow-schema = "52.1.0"
+datafusion = "40.0.0"
+datafusion-common = "40.0.0"
+datafusion-expr = "40.0.0"
+datafusion-optimizer = "40.0.0"
+datafusion-physical-expr = "40.0.0"
+datafusion-proto = "40.0.0"
+datafusion-sql = "40.0.0"
+
+tokio = { version = "1.38.0", features = ["rt-multi-thread"] }

@@ -1,0 +1,4 @@
+select p.*, CONCAT(first_name, ' ', last_name)
+from people p
+join department d on d.did = p.did
+where first_name = 'Jiri' and last_name = 'Prochazka';
