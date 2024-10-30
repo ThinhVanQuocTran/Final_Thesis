@@ -6,31 +6,45 @@ use datafusion::common::Result;
 use datafusion::execution::context::{SessionConfig, SessionContext};
 use stats::Stats;
 use utils::read_file;
+use std::fs;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let sql_query = "
-    select p.*
-    from people p
-    where first_name like 'Jiri' and last_name = 'Prochazka' or pid = 3;";
-
     // Set up the config
     let config = SessionConfig::default();
     let ctx = SessionContext::new_with_config(config);
 
-    // Create tables in the context
-    ctx.sql("CREATE TABLE department (did INT PRIMARY KEY, name VARCHAR(50), year_started INT, year_ended INT)").await?.collect().await?;
-    ctx.sql("CREATE TABLE people (pid INT PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), did INT NOT NULL)").await?.collect().await?;
+    // Specify the path to your SQL commands file
+    let sql_file_path = "commands.sql"; // Adjust the filename as needed
 
-    // Read the SQL query from a file
-    let contents = read_file("query.txt");
-    println!("With text:\n{contents}");
+    // Read the SQL commands from the file
+    let sql_commands = read_file(sql_file_path);
+    
+    // Split the commands by new line (assuming each command is on a new line)
+    let commands: Vec<&str> = sql_commands.lines().collect();
+
+    // Loop through each command and execute
+    for command in commands {
+        let command = command.trim();
+        if !command.is_empty() {
+            match ctx.sql(command).await {
+                Ok(_) => println!("Executed: {}", command),
+                Err(err) => eprintln!("Error executing command: {}", err),
+            }
+        }
+    }
+
+    // Example SQL query for analysis
+    let example_query = "
+    SELECT p.*
+    FROM people p
+    WHERE first_name LIKE 'Jiri' AND last_name = 'Prochazka' OR pid = 3;";
 
     // Parse and optimize the logical plan
-    let logical_plan_from_file = ctx.sql(&contents).await?.into_optimized_plan()?;
+    let logical_plan_from_file = ctx.sql(example_query).await?.into_optimized_plan()?;
 
     // Initialize Stats and process the logical plan
-    let mut stat = Stats::new(contents, logical_plan_from_file);
+    let mut stat = Stats::new(example_query.to_string(), logical_plan_from_file);
     println!(r#"Optimized Logical Plan:\n"{}""#, stat.logical_plan.display_indent());
 
     // Process the query and print statistics
